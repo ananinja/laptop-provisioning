@@ -40,6 +40,19 @@ bash mac/bootstrap.sh
 
 Installs Homebrew automatically if it isn't already there, then installs Office.
 
+### Windows — uninstall
+
+To remove the baseline apps (e.g. offboarding or resetting a machine),
+**double-click `uninstall.cmd`** in the `windows` folder, or run:
+
+```powershell
+.\windows\uninstall.ps1
+```
+
+It lists what it's about to remove and asks for confirmation first, skips apps that
+aren't installed, and prints the same kind of summary (Uninstalled / Not present /
+Failed). Add `-Force` to skip the prompt for unattended use.
+
 ## Getting the files
 
 The repo is **private**, so a fresh laptop can't fetch it anonymously. Clone it with
@@ -85,6 +98,8 @@ laptop-provisioning/
 │  ├─ apps.json        # the app list (winget manifest) - single source of truth
 │  ├─ install.cmd      # double-click installer (launches install.ps1)
 │  ├─ install.ps1      # installs each app, prints a summary at the end
+│  ├─ uninstall.cmd    # double-click uninstaller (launches uninstall.ps1)
+│  ├─ uninstall.ps1    # removes each app (with confirmation), prints a summary
 │  └─ bootstrap.ps1    # one-liner entry point (for when the repo is public)
 ├─ mac/
 │  ├─ Brewfile         # the app list (Homebrew)
