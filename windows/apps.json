@@ -9,7 +9,7 @@
         { "PackageIdentifier": "SlackTechnologies.Slack" },
         { "PackageIdentifier": "Google.Chrome" },
         { "PackageIdentifier": "Microsoft.PowerBI" },
-        { "PackageIdentifier": "AnyDeskSoftwareGmbH.AnyDesk" }
+        { "PackageIdentifier": "AnyDesk.AnyDesk" }
       ],
       "SourceDetails": {
         "Argument": "https://cdn.winget.microsoft.com/cache",
