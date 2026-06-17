@@ -1,0 +1,27 @@
+<!--
+  Slimmed Microsoft 365 install (DEFAULT).
+  Keeps: Word, Excel, PowerPoint, Outlook.
+  Excludes everything else (Access, Publisher, OneNote, Skype/Lync,
+  OneDrive, Teams [installed separately], Groove, Bing).
+
+  Product ID O365ProPlusRetail = "Microsoft 365 Apps for enterprise" - matches
+  what winget installed and activated before. If your licensing is actually
+  Microsoft 365 Business, change it to O365BusinessRetail.
+-->
+<Configuration>
+  <Add OfficeClientEdition="64" Channel="Current">
+    <Product ID="O365ProPlusRetail">
+      <Language ID="MatchOS" />
+      <ExcludeApp ID="Access" />
+      <ExcludeApp ID="Bing" />
+      <ExcludeApp ID="Groove" />
+      <ExcludeApp ID="Lync" />
+      <ExcludeApp ID="OneDrive" />
+      <ExcludeApp ID="OneNote" />
+      <ExcludeApp ID="Publisher" />
+      <ExcludeApp ID="Teams" />
+    </Product>
+  </Add>
+  <Display Level="None" AcceptEULA="TRUE" />
+  <Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
+</Configuration>

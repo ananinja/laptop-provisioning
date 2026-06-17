@@ -27,6 +27,21 @@ baseline, skips apps already present, retries once on a transient failure, and a
 the end prints a **summary** — each app marked Installed / Already present /
 Failed (with the reason for any failure).
 
+**Office is slimmed by default** — only Word, Excel, PowerPoint and Outlook
+(faster download/install). If someone needs the full suite (Access, Publisher,
+OneNote, …), double-click **`install-full.cmd`** instead, or run:
+
+```powershell
+.\windows\install.ps1 -FullOffice
+```
+
+The app lists live in `windows/office-slim.xml` and `windows/office-full.xml` —
+add or remove `<ExcludeApp>` lines to change what Office installs.
+
+Note: switching an already-installed Office between slim and full means
+uninstalling Office first (`uninstall.cmd`), then re-running — the script skips
+Office if it's already present.
+
 Prefer the terminal? In **PowerShell**, from the repo folder:
 
 ```powershell
@@ -105,7 +120,10 @@ Re-running is safe — already-installed apps are skipped, so it doubles as a
 laptop-provisioning/
 ├─ windows/
 │  ├─ apps.json        # the app list (winget manifest) - single source of truth
-│  ├─ install.cmd      # double-click installer (launches install.ps1)
+│  ├─ office-slim.xml  # default Office config (Word/Excel/PowerPoint/Outlook)
+│  ├─ office-full.xml  # full Office suite config (-FullOffice option)
+│  ├─ install.cmd      # double-click installer, slim Office (launches install.ps1)
+│  ├─ install-full.cmd # double-click installer, FULL Office suite
 │  ├─ install.ps1      # installs each app, prints a summary at the end
 │  ├─ uninstall.cmd    # double-click uninstaller (launches uninstall.ps1)
 │  ├─ uninstall.ps1    # removes each app (with confirmation), prints a summary
