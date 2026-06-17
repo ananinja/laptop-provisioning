@@ -1,11 +1,9 @@
 @echo off
 REM Easy installer: double-click this file, or run  .\windows\install.cmd
-REM Installs the standard app baseline from apps.json (next to this file).
-REM Already-installed apps are skipped; missing ones are installed.
+REM Runs install.ps1, which installs the apps in apps.json and prints a
+REM summary (installed / already present / failed) at the end.
 
-echo ==^> Installing standard apps...
-winget import --import-file "%~dp0apps.json" --accept-package-agreements --accept-source-agreements --ignore-unavailable
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0install.ps1"
 
 echo.
-echo ==^> Done. Reminder: sign into Microsoft 365 to activate Office.
 pause

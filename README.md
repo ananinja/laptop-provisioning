@@ -21,8 +21,9 @@ Same set for every user (no per-team variations). Mac devices only require Micro
 1. Get the files onto the laptop (see [Getting the files](#getting-the-files) below).
 2. Open the `laptop-provisioning\windows` folder and **double-click `install.cmd`**.
 
-That's it. It installs the baseline, skips apps already present, and pauses so you
-can read the result.
+That's it. It installs the baseline, skips apps already present, and at the end
+prints a **summary** — each app marked Installed / Already present / Failed (with
+the reason for any failure) — then pauses so you can read it.
 
 Prefer the terminal? In **PowerShell**, from the repo folder:
 
@@ -81,8 +82,9 @@ Re-running is safe — already-installed apps are skipped, so it doubles as a
 ```
 laptop-provisioning/
 ├─ windows/
-│  ├─ apps.json        # the app list (winget manifest)
-│  ├─ install.cmd      # double-click installer (uses apps.json)
+│  ├─ apps.json        # the app list (winget manifest) - single source of truth
+│  ├─ install.cmd      # double-click installer (launches install.ps1)
+│  ├─ install.ps1      # installs each app, prints a summary at the end
 │  └─ bootstrap.ps1    # one-liner entry point (for when the repo is public)
 ├─ mac/
 │  ├─ Brewfile         # the app list (Homebrew)
