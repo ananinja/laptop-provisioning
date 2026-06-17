@@ -39,6 +39,13 @@ bash mac/bootstrap.sh
 ```
 
 Installs Homebrew automatically if it isn't already there, then installs Office.
+Mac is intentionally Office-only, per the team.
+
+To remove it again:
+
+```bash
+bash mac/uninstall.sh
+```
 
 ### Windows — uninstall
 
@@ -102,8 +109,9 @@ laptop-provisioning/
 │  ├─ uninstall.ps1    # removes each app (with confirmation), prints a summary
 │  └─ bootstrap.ps1    # one-liner entry point (for when the repo is public)
 ├─ mac/
-│  ├─ Brewfile         # the app list (Homebrew)
-│  └─ bootstrap.sh     # installs Homebrew, then the list
+│  ├─ Brewfile         # the app list (Homebrew) - Office only
+│  ├─ bootstrap.sh     # installs Homebrew, then the list
+│  └─ uninstall.sh     # removes the Mac baseline (Office)
 └─ README.md
 ```
 
