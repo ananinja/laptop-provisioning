@@ -1,0 +1,6 @@
+# Standard Mac app baseline. Install with:  brew bundle --file=Brewfile
+# (Homebrew installs itself in mac/bootstrap.sh first.)
+#
+# Per the team: Mac devices only require Microsoft Office.
+
+cask "microsoft-office"
