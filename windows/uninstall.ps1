@@ -9,6 +9,19 @@
 param([switch]$Force)
 
 $ErrorActionPreference = "Continue"
+
+# Removing machine-wide apps needs admin. Elevate once up front.
+$principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+if (-not $principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
+    Write-Host "Re-launching as administrator..." -ForegroundColor Yellow
+    $fwd = if ($Force) { "-Force" } else { "" }
+    Start-Process -FilePath "powershell.exe" -Verb RunAs -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass",
+        "-Command", "& '$PSCommandPath' $fwd; Read-Host 'Done - press Enter to close'"
+    )
+    exit
+}
+
 $manifestPath = Join-Path $PSScriptRoot "apps.json"
 
 if (-not (Test-Path $manifestPath)) {
