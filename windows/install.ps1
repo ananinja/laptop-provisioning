@@ -1,26 +1,28 @@
 <#
-  Installs the standard app baseline from apps.json (next to this file),
-  one app at a time, then prints a summary of what was installed, what was
-  already present, and what failed (and why).
+  Installs the standard app baseline on a new Windows laptop, then prints a
+  summary of what was installed, what was already present, and what failed.
 
-  Office is slimmed by default (Word/Excel/PowerPoint/Outlook only).
-  Use -FullOffice (or install-full.cmd) to install the full suite instead.
+  Two kinds of apps:
+   1. winget apps  - listed in apps.json (Office, Teams, Slack, Chrome,
+      Power BI, AnyDesk). Office is slimmed to Word/Excel/PowerPoint/Outlook
+      via office-config.xml.
+   2. Cortex XDR   - not on winget. Downloaded from a private URL supplied via
+      $env:CORTEX_MSI_URL or a gitignored installers/cortex.url file, then
+      installed silently. Skipped (not failed) if no URL is configured.
 
-  Run via install.cmd (double-click) or:  .\windows\install.ps1 [-FullOffice]
+  Run via install.cmd (double-click) or:  .\windows\install.ps1
 #>
-param([switch]$FullOffice)
 
 $ErrorActionPreference = "Continue"
 
-# Machine-wide installers (Office, Chrome, Power BI) need admin. Elevate ONCE up
-# front so we don't get a cancel-able UAC prompt in the middle of the run.
+# Machine-wide installers need admin. Elevate ONCE up front so we don't get a
+# cancel-able UAC prompt in the middle of the run.
 $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 if (-not $principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
     Write-Host "Re-launching as administrator..." -ForegroundColor Yellow
-    $fwd = if ($FullOffice) { "-FullOffice" } else { "" }
     Start-Process -FilePath "powershell.exe" -Verb RunAs -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass",
-        "-Command", "& '$PSCommandPath' $fwd; Read-Host 'Done - press Enter to close'"
+        "-Command", "& '$PSCommandPath'; Read-Host 'Done - press Enter to close'"
     )
     exit
 }
@@ -36,7 +38,7 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# Single source of truth: the app IDs come straight from apps.json
+# Single source of truth: the winget app IDs come straight from apps.json
 $ids = (Get-Content $manifestPath -Raw | ConvertFrom-Json).Sources[0].Packages.PackageIdentifier
 
 $results = @()
@@ -53,12 +55,11 @@ foreach ($id in $ids) {
         continue
     }
 
-    # Build the winget args. Office is special: we pass a config XML via
-    # --override so we control which Office apps get installed (slim vs full).
+    # Build the winget args. Office is special: a config XML via --override lets
+    # us install only Word/Excel/PowerPoint/Outlook.
     if ($id -eq "Microsoft.Office") {
-        $cfgName = if ($FullOffice) { "office-full.xml" } else { "office-slim.xml" }
-        $cfgPath = Join-Path $PSScriptRoot $cfgName
-        Write-Host ("    Office config: {0}" -f $cfgName) -ForegroundColor DarkGray
+        $cfgPath = Join-Path $PSScriptRoot "office-config.xml"
+        Write-Host "    Office config: office-config.xml (Word/Excel/PowerPoint/Outlook)" -ForegroundColor DarkGray
         $wargs = @("install", "--id", $id, "--exact",
                    "--accept-package-agreements", "--accept-source-agreements",
                    "--override", "/configure $cfgPath")
@@ -91,6 +92,46 @@ foreach ($id in $ids) {
     }
 }
 
+# ---------- Cortex XDR (not on winget - download from a private URL) ----------
+Write-Host ""
+Write-Host "==> Cortex XDR" -ForegroundColor Cyan
+
+# Resolve the URL: env var first, then a gitignored installers/cortex.url file.
+$cortexUrl = $env:CORTEX_MSI_URL
+$urlFile = Join-Path $PSScriptRoot "installers\cortex.url"
+if ([string]::IsNullOrWhiteSpace($cortexUrl) -and (Test-Path $urlFile)) {
+    $cortexUrl = (Get-Content $urlFile -Raw).Trim()
+}
+
+if (Test-Path "$env:ProgramFiles\Palo Alto Networks\Traps\cytool.exe") {
+    Write-Host "    already installed - skipping" -ForegroundColor Yellow
+    $results += [pscustomobject]@{ App = "Cortex XDR"; Status = "Already present"; Detail = "" }
+} elseif ([string]::IsNullOrWhiteSpace($cortexUrl)) {
+    Write-Host "    no URL configured - skipping (set CORTEX_MSI_URL or installers\cortex.url)" -ForegroundColor Yellow
+    $results += [pscustomobject]@{ App = "Cortex XDR"; Status = "Skipped"; Detail = "no URL configured" }
+} else {
+    try {
+        $msi = Join-Path $env:TEMP "cortex-xdr.msi"
+        Write-Host "    downloading installer..." -ForegroundColor DarkGray
+        Invoke-WebRequest -Uri $cortexUrl -OutFile $msi -UseBasicParsing
+        $log = Join-Path $env:TEMP "cortex-xdr.log"
+        $p = Start-Process msiexec.exe -Wait -PassThru -ArgumentList @(
+            "/i", "`"$msi`"", "/qn", "/norestart", "/l*v", "`"$log`"")
+        $code = $p.ExitCode
+        if ($code -eq 0 -or $code -eq 3010) {
+            Write-Host "    installed" -ForegroundColor Green
+            $detail = if ($code -eq 3010) { "reboot required" } else { "" }
+            $results += [pscustomobject]@{ App = "Cortex XDR"; Status = "Installed"; Detail = $detail }
+        } else {
+            Write-Host "    FAILED: msiexec exit $code" -ForegroundColor Red
+            $results += [pscustomobject]@{ App = "Cortex XDR"; Status = "Failed"; Detail = "msiexec exit $code (see $log)" }
+        }
+    } catch {
+        Write-Host "    FAILED: $($_.Exception.Message)" -ForegroundColor Red
+        $results += [pscustomobject]@{ App = "Cortex XDR"; Status = "Failed"; Detail = $_.Exception.Message }
+    }
+}
+
 # ---------- Summary ----------
 Write-Host ""
 Write-Host "===================== SUMMARY =====================" -ForegroundColor Cyan
@@ -98,10 +139,10 @@ $results | Format-Table -AutoSize App, Status, Detail
 
 $installed = @($results | Where-Object { $_.Status -eq "Installed" }).Count
 $present   = @($results | Where-Object { $_.Status -eq "Already present" }).Count
+$skipped   = @($results | Where-Object { $_.Status -eq "Skipped" }).Count
 $failed    = @($results | Where-Object { $_.Status -eq "Failed" }).Count
 
-Write-Host ("Office mode: {0}" -f $(if ($FullOffice) { "FULL suite" } else { "slim (Word/Excel/PowerPoint/Outlook)" })) -ForegroundColor DarkGray
-Write-Host ("Installed now: {0}   |   Already present: {1}   |   Failed: {2}" -f $installed, $present, $failed) -ForegroundColor White
+Write-Host ("Installed now: {0}   |   Already present: {1}   |   Skipped: {2}   |   Failed: {3}" -f $installed, $present, $skipped, $failed) -ForegroundColor White
 if ($failed -gt 0) {
     Write-Host "Some apps failed - see the Detail column above for why." -ForegroundColor Red
 }
