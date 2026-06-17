@@ -13,35 +13,57 @@ Edit one file, every future machine gets the change.
 | Google Chrome | ✅ | — |
 | Power BI | ✅ | — |
 
-Same set for every user (no per-team variations yet).
-Mac devices only require Microsoft Office.
+Same set for every user (no per-team variations). Mac devices only require Microsoft Office.
 
-## How to use it
+## How to run it
 
-### Windows
-On a fresh laptop, open **PowerShell** and paste:
+### Windows — easiest (double-click)
+1. Get the files onto the laptop (see [Getting the files](#getting-the-files) below).
+2. Open the `laptop-provisioning\windows` folder and **double-click `install.cmd`**.
+
+That's it. It installs the baseline, skips apps already present, and pauses so you
+can read the result.
+
+Prefer the terminal? In **PowerShell**, from the repo folder:
+
+```powershell
+.\windows\install.cmd
+```
+
+### Mac
+In **Terminal**, from the repo folder:
+
+```bash
+bash mac/bootstrap.sh
+```
+
+Installs Homebrew automatically if it isn't already there, then installs Office.
+
+## Getting the files
+
+The repo is **private**, so a fresh laptop can't fetch it anonymously. Clone it with
+an account that has access:
+
+```powershell
+gh repo clone ananinja/laptop-provisioning
+cd laptop-provisioning
+```
+
+**When this repo is public** (an org decision — it holds no secrets, only public
+app names and scripts), the clone step disappears and a fresh laptop can run the
+whole thing with one pasted line:
 
 ```powershell
 irm https://raw.githubusercontent.com/ananinja/laptop-provisioning/main/windows/bootstrap.ps1 | iex
 ```
 
-Requires Windows 10 (1809+) or Windows 11 — `winget` ships with both. If it's
-missing, install **App Installer** from the Microsoft Store and re-run.
-
-### Mac
-On a fresh Mac, open **Terminal** and paste:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/ananinja/laptop-provisioning/main/mac/bootstrap.sh | bash
-```
-
-Installs Homebrew automatically if it isn't already there.
+That's the eventual hands-off goal. Until then, use the clone + `install.cmd` flow above.
 
 ## ⚠️ Office licensing
 
-The scripts **install** Microsoft Office, but activation is per-user: the new
-hire must sign in with their Microsoft 365 Business account to license it.
-That step stays manual.
+The scripts **install** Microsoft Office, but activation is per-user: the new hire
+must sign in with their Microsoft 365 Business account to license it. That step
+stays manual.
 
 ## Changing the app list
 
@@ -51,8 +73,8 @@ That step stays manual.
   Find a name with `brew search <app name>`.
 
 Commit the change. Every laptop provisioned afterward picks it up automatically.
-Re-running the command on an existing machine is safe — already-installed apps
-are skipped, so it doubles as a "top up missing apps" tool.
+Re-running is safe — already-installed apps are skipped, so it doubles as a
+"top up missing apps" tool.
 
 ## Repo layout
 
@@ -60,7 +82,8 @@ are skipped, so it doubles as a "top up missing apps" tool.
 laptop-provisioning/
 ├─ windows/
 │  ├─ apps.json        # the app list (winget manifest)
-│  └─ bootstrap.ps1    # downloads the list and installs it
+│  ├─ install.cmd      # double-click installer (uses apps.json)
+│  └─ bootstrap.ps1    # one-liner entry point (for when the repo is public)
 ├─ mac/
 │  ├─ Brewfile         # the app list (Homebrew)
 │  └─ bootstrap.sh     # installs Homebrew, then the list
@@ -69,7 +92,9 @@ laptop-provisioning/
 
 ## Roadmap
 
-- **Now — admin pastes a command** (above). Proven, zero infrastructure.
-- **Next — fully unattended** (optional). A Windows Provisioning Package (`.ppkg`)
-  built with the free Windows Configuration Designer can run the bootstrap at
-  first boot with no clicks. Build after the paste-a-command flow is verified.
+- **Now — clone + `install.cmd`.** Proven, works on a private repo, zero infrastructure.
+- **Next — one-line paste.** Make the repo public so `bootstrap.ps1` runs from a single
+  pasted command on any fresh laptop.
+- **Later — fully unattended (optional).** A Windows Provisioning Package (`.ppkg`)
+  built with the free Windows Configuration Designer can run the bootstrap at first
+  boot with no clicks. Build after the paste-a-command flow is verified.
