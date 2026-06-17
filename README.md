@@ -3,7 +3,7 @@
 Automates the standard new-laptop app setup so admins don't install each app by
 hand. Edit one file, every future machine gets the change.
 
-## What gets installed
+## What gets installed - As Agreed
 
 | App | Windows | Mac |
 |-----|:------:|:---:|
