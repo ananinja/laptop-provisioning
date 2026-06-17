@@ -92,22 +92,6 @@ irm https://raw.githubusercontent.com/ananinja/laptop-provisioning/main/windows/
 
 That's the eventual hands-off goal. Until then, use the clone + `install.cmd` flow.
 
-## ⚠️ Office licensing
-
-The scripts **install** Microsoft Office, but activation is per-user: the new
-hire must sign in with their Microsoft 365 account to license it. That step stays
-manual.
-
-## Changing the app list
-
-- **Windows (winget apps):** edit `windows/apps.json` — add a line with the app's
-  winget ID. Find one with `winget search "<app name>"`.
-- **Which Office apps install:** edit `windows/office-config.xml` — add/remove
-  `<ExcludeApp>` lines.
-- **Mac:** edit `mac/Brewfile` — add a `cask "<name>"` line.
-
-Commit the change. Every laptop provisioned afterward picks it up automatically.
-Re-running is safe — already-installed apps are skipped.
 
 ## Repo layout
 
@@ -127,12 +111,3 @@ laptop-provisioning/
 │  └─ uninstall.sh      # removes the Mac baseline (Office)
 └─ README.md
 ```
-
-## Roadmap
-
-- **Now — clone + `install.cmd`.** Proven, works on a private repo.
-- **Next — one-line paste.** Make the repo public so `bootstrap.ps1` runs from a
-  single pasted command on any fresh laptop.
-- **Later — fully unattended (optional).** A Windows Provisioning Package
-  (`.ppkg`) built with the free Windows Configuration Designer can run the
-  bootstrap at first boot with no clicks.
