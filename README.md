@@ -24,17 +24,23 @@ end of the run. See [Cortex XDR](#cortex-xdr).
 
 ## How to run it
 
-### Windows — easiest (double-click)
-1. Get the files onto the laptop (see [Getting the files](#getting-the-files)).
-2. Open the `laptop-provisioning\windows` folder and **double-click `install.cmd`**.
+### Windows — one line (recommended)
+On a fresh laptop, open **PowerShell** and paste:
 
-It **asks for admin once** (a single UAC prompt — accept it), installs everything,
+```powershell
+irm https://raw.githubusercontent.com/ananinja/laptop-provisioning/main/windows/bootstrap.ps1 | iex
+```
+
+No git, no GitHub login, nothing to install first. It downloads the toolkit,
+**asks for admin once** (a single UAC prompt — accept it), installs everything,
 skips apps already present, retries once on a transient failure, and at the end
 prints a **summary** — each app marked Installed / Already present / Failed (with
 the reason for any failure) — plus a reminder of the manual steps (Cortex XDR,
 Office sign-in).
 
-Prefer the terminal? In **PowerShell**, from the repo folder:
+### Windows — from a local copy
+If you've cloned/downloaded the repo (see [Getting the files](#getting-the-files)),
+just **double-click `install.cmd`** in the `windows` folder, or in PowerShell:
 
 ```powershell
 .\windows\install.ps1
@@ -74,23 +80,16 @@ reminder to do this at the end of every run.
 
 ## Getting the files
 
-The repo is **private**, so a fresh laptop can't fetch it anonymously. Clone it
-with an account that has access:
+For a normal install you **don't need the files** — use the one-line command
+above. You only need a local copy to **edit the app list** or run from a folder:
 
 ```powershell
-gh repo clone ananinja/laptop-provisioning
+git clone https://github.com/ananinja/laptop-provisioning.git
 cd laptop-provisioning
 ```
 
-**When this repo is public** (an org decision — nothing sensitive lives here;
-Cortex is installed manually and never touches the repo), the clone step
-disappears and a fresh laptop can run the whole thing with one pasted line:
-
-```powershell
-irm https://raw.githubusercontent.com/ananinja/laptop-provisioning/main/windows/bootstrap.ps1 | iex
-```
-
-That's the eventual hands-off goal. Until then, use the clone + `install.cmd` flow.
+The repo is public and holds nothing sensitive (Cortex is installed manually and
+never touches the repo), which is what lets the one-liner work with no login.
 
 
 ## Repo layout
@@ -104,7 +103,7 @@ laptop-provisioning/
 │  ├─ install.ps1       # installs the winget apps, prints a summary
 │  ├─ uninstall.cmd     # double-click uninstaller (launches uninstall.ps1)
 │  ├─ uninstall.ps1     # removes the winget apps (with confirmation)
-│  └─ bootstrap.ps1     # one-liner entry point (for when the repo is public)
+│  └─ bootstrap.ps1     # one-liner entry point (downloads + runs the toolkit)
 ├─ mac/
 │  ├─ Brewfile          # the app list (Homebrew) - Office only
 │  ├─ bootstrap.sh      # installs Homebrew, then the list
