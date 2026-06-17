@@ -1,6 +1,6 @@
 {
   "$schema": "https://aka.ms/winget-packages.schema.2.0.json",
-  "CreationDate": "2026-06-17",
+  "CreationDate": "2026-06-17T00:00:00.000-00:00",
   "Sources": [
     {
       "Packages": [
@@ -10,7 +10,7 @@
         { "PackageIdentifier": "Google.Chrome" },
         { "PackageIdentifier": "Microsoft.PowerBI" }
       ],
-      "Source": {
+      "SourceDetails": {
         "Argument": "https://cdn.winget.microsoft.com/cache",
         "Identifier": "Microsoft.Winget.Source_8wekyb3d8bbwe",
         "Name": "winget",
