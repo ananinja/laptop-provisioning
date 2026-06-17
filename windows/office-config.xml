@@ -1,8 +1,9 @@
 <!--
-  Slimmed Microsoft 365 install (DEFAULT).
-  Keeps: Word, Excel, PowerPoint, Outlook.
-  Excludes everything else (Access, Publisher, OneNote, Skype/Lync,
+  Office install config: Word, Excel, PowerPoint, Outlook only.
+  Everything else is excluded (Access, Publisher, OneNote, Skype/Lync,
   OneDrive, Teams [installed separately], Groove, Bing).
+
+  To change which Office apps install, add/remove <ExcludeApp> lines below.
 
   Product ID O365ProPlusRetail = "Microsoft 365 Apps for enterprise" - matches
   what winget installed and activated before. If your licensing is actually
