@@ -7,6 +7,19 @@
 #>
 
 $ErrorActionPreference = "Continue"
+
+# Machine-wide installers (Office, Chrome, Power BI) need admin. Elevate ONCE up
+# front so we don't get a cancel-able UAC prompt in the middle of the run.
+$principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+if (-not $principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
+    Write-Host "Re-launching as administrator..." -ForegroundColor Yellow
+    Start-Process -FilePath "powershell.exe" -Verb RunAs -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass",
+        "-Command", "& '$PSCommandPath'; Read-Host 'Done - press Enter to close'"
+    )
+    exit
+}
+
 $manifestPath = Join-Path $PSScriptRoot "apps.json"
 
 if (-not (Test-Path $manifestPath)) {
@@ -35,10 +48,16 @@ foreach ($id in $ids) {
         continue
     }
 
-    # Install, capturing output so we can explain failures.
-    $output = winget install --id $id --exact --silent `
-        --accept-package-agreements --accept-source-agreements 2>&1
-    $code = $LASTEXITCODE
+    # Install, capturing output so we can explain failures. Retry once on
+    # failure - rescues transient flakes (e.g. Slack's per-user installer).
+    $code = $null; $output = $null
+    foreach ($attempt in 1..2) {
+        if ($attempt -gt 1) { Write-Host "    retrying ($attempt/2)..." -ForegroundColor Yellow }
+        $output = winget install --id $id --exact --silent `
+            --accept-package-agreements --accept-source-agreements 2>&1
+        $code = $LASTEXITCODE
+        if ($code -eq 0) { break }
+    }
     $output | ForEach-Object { Write-Host "    $_" }
 
     if ($code -eq 0) {

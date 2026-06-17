@@ -21,9 +21,11 @@ Same set for every user (no per-team variations). Mac devices only require Micro
 1. Get the files onto the laptop (see [Getting the files](#getting-the-files) below).
 2. Open the `laptop-provisioning\windows` folder and **double-click `install.cmd`**.
 
-That's it. It installs the baseline, skips apps already present, and at the end
-prints a **summary** — each app marked Installed / Already present / Failed (with
-the reason for any failure) — then pauses so you can read it.
+That's it. It **asks for admin once** (a single UAC prompt — accept it; Office,
+Chrome and Power BI are machine-wide installers that need it), installs the
+baseline, skips apps already present, retries once on a transient failure, and at
+the end prints a **summary** — each app marked Installed / Already present /
+Failed (with the reason for any failure).
 
 Prefer the terminal? In **PowerShell**, from the repo folder:
 
