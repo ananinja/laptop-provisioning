@@ -2,13 +2,11 @@
   Installs the standard app baseline on a new Windows laptop, then prints a
   summary of what was installed, what was already present, and what failed.
 
-  Two kinds of apps:
-   1. winget apps  - listed in apps.json (Office, Teams, Slack, Chrome,
-      Power BI, AnyDesk). Office is slimmed to Word/Excel/PowerPoint/Outlook
-      via office-config.xml.
-   2. Cortex XDR   - not on winget. Downloaded from a private URL supplied via
-      $env:CORTEX_MSI_URL or a gitignored installers/cortex.url file, then
-      installed silently. Skipped (not failed) if no URL is configured.
+  Apps come from apps.json (Office, Teams, Slack, Chrome, Power BI, AnyDesk).
+  Office is slimmed to Word/Excel/PowerPoint/Outlook via office-config.xml.
+
+  Cortex XDR is NOT automated here - the admin installs it manually from the
+  Cortex console (tenant-specific installer). The script reminds you at the end.
 
   Run via install.cmd (double-click) or:  .\windows\install.ps1
 #>
@@ -92,46 +90,6 @@ foreach ($id in $ids) {
     }
 }
 
-# ---------- Cortex XDR (not on winget - download from a private URL) ----------
-Write-Host ""
-Write-Host "==> Cortex XDR" -ForegroundColor Cyan
-
-# Resolve the URL: env var first, then a gitignored installers/cortex.url file.
-$cortexUrl = $env:CORTEX_MSI_URL
-$urlFile = Join-Path $PSScriptRoot "installers\cortex.url"
-if ([string]::IsNullOrWhiteSpace($cortexUrl) -and (Test-Path $urlFile)) {
-    $cortexUrl = (Get-Content $urlFile -Raw).Trim()
-}
-
-if (Test-Path "$env:ProgramFiles\Palo Alto Networks\Traps\cytool.exe") {
-    Write-Host "    already installed - skipping" -ForegroundColor Yellow
-    $results += [pscustomobject]@{ App = "Cortex XDR"; Status = "Already present"; Detail = "" }
-} elseif ([string]::IsNullOrWhiteSpace($cortexUrl)) {
-    Write-Host "    no URL configured - skipping (set CORTEX_MSI_URL or installers\cortex.url)" -ForegroundColor Yellow
-    $results += [pscustomobject]@{ App = "Cortex XDR"; Status = "Skipped"; Detail = "no URL configured" }
-} else {
-    try {
-        $msi = Join-Path $env:TEMP "cortex-xdr.msi"
-        Write-Host "    downloading installer..." -ForegroundColor DarkGray
-        Invoke-WebRequest -Uri $cortexUrl -OutFile $msi -UseBasicParsing
-        $log = Join-Path $env:TEMP "cortex-xdr.log"
-        $p = Start-Process msiexec.exe -Wait -PassThru -ArgumentList @(
-            "/i", "`"$msi`"", "/qn", "/norestart", "/l*v", "`"$log`"")
-        $code = $p.ExitCode
-        if ($code -eq 0 -or $code -eq 3010) {
-            Write-Host "    installed" -ForegroundColor Green
-            $detail = if ($code -eq 3010) { "reboot required" } else { "" }
-            $results += [pscustomobject]@{ App = "Cortex XDR"; Status = "Installed"; Detail = $detail }
-        } else {
-            Write-Host "    FAILED: msiexec exit $code" -ForegroundColor Red
-            $results += [pscustomobject]@{ App = "Cortex XDR"; Status = "Failed"; Detail = "msiexec exit $code (see $log)" }
-        }
-    } catch {
-        Write-Host "    FAILED: $($_.Exception.Message)" -ForegroundColor Red
-        $results += [pscustomobject]@{ App = "Cortex XDR"; Status = "Failed"; Detail = $_.Exception.Message }
-    }
-}
-
 # ---------- Summary ----------
 Write-Host ""
 Write-Host "===================== SUMMARY =====================" -ForegroundColor Cyan
@@ -139,11 +97,14 @@ $results | Format-Table -AutoSize App, Status, Detail
 
 $installed = @($results | Where-Object { $_.Status -eq "Installed" }).Count
 $present   = @($results | Where-Object { $_.Status -eq "Already present" }).Count
-$skipped   = @($results | Where-Object { $_.Status -eq "Skipped" }).Count
 $failed    = @($results | Where-Object { $_.Status -eq "Failed" }).Count
 
-Write-Host ("Installed now: {0}   |   Already present: {1}   |   Skipped: {2}   |   Failed: {3}" -f $installed, $present, $skipped, $failed) -ForegroundColor White
+Write-Host ("Installed now: {0}   |   Already present: {1}   |   Failed: {2}" -f $installed, $present, $failed) -ForegroundColor White
 if ($failed -gt 0) {
     Write-Host "Some apps failed - see the Detail column above for why." -ForegroundColor Red
 }
-Write-Host "Reminder: sign into Microsoft 365 to activate Office." -ForegroundColor Yellow
+
+Write-Host ""
+Write-Host "MANUAL STEPS (not automated):" -ForegroundColor Yellow
+Write-Host "  1. Install Cortex XDR from the Cortex console (tenant-specific installer)." -ForegroundColor Yellow
+Write-Host "  2. Sign into Microsoft 365 to activate Office." -ForegroundColor Yellow

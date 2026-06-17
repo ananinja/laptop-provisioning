@@ -1,5 +1,0 @@
-# Never commit installer binaries or the Cortex URL - they are tenant-specific
-# / sensitive and must stay out of the repo (especially if it goes public).
-*
-!.gitignore
-!README.md
