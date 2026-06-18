@@ -4,12 +4,12 @@
   "Sources": [
     {
       "Packages": [
-        { "PackageIdentifier": "Microsoft.Office" },
         { "PackageIdentifier": "Microsoft.Teams" },
         { "PackageIdentifier": "SlackTechnologies.Slack" },
         { "PackageIdentifier": "Google.Chrome" },
         { "PackageIdentifier": "Microsoft.PowerBI" },
-        { "PackageIdentifier": "AnyDesk.AnyDesk" }
+        { "PackageIdentifier": "AnyDesk.AnyDesk" },
+        { "PackageIdentifier": "Microsoft.Office" }
       ],
       "SourceDetails": {
         "Argument": "https://cdn.winget.microsoft.com/cache",

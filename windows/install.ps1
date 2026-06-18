@@ -2,8 +2,8 @@
   Installs the standard app baseline on a new Windows laptop, then prints a
   summary of what was installed, what was already present, and what failed.
 
-  Apps come from apps.json (Office, Teams, Slack, Chrome, Power BI, AnyDesk).
-  Office is slimmed to Word/Excel/PowerPoint/Outlook via office-config.xml.
+  Apps come from apps.json (Teams, Slack, Chrome, Power BI, AnyDesk, Office).
+  Office installs last because it's the slowest (full Microsoft 365 suite).
 
   Cortex XDR is NOT automated here - the admin installs it manually from the
   Cortex console (tenant-specific installer). The script reminds you at the end.
@@ -53,18 +53,8 @@ foreach ($id in $ids) {
         continue
     }
 
-    # Build the winget args. Office is special: a config XML via --override lets
-    # us install only Word/Excel/PowerPoint/Outlook.
-    if ($id -eq "Microsoft.Office") {
-        $cfgPath = Join-Path $PSScriptRoot "office-config.xml"
-        Write-Host "    Office config: office-config.xml (Word/Excel/PowerPoint/Outlook)" -ForegroundColor DarkGray
-        $wargs = @("install", "--id", $id, "--exact",
-                   "--accept-package-agreements", "--accept-source-agreements",
-                   "--override", "/configure $cfgPath")
-    } else {
-        $wargs = @("install", "--id", $id, "--exact", "--silent",
-                   "--accept-package-agreements", "--accept-source-agreements")
-    }
+    $wargs = @("install", "--id", $id, "--exact", "--silent",
+               "--accept-package-agreements", "--accept-source-agreements")
 
     # Install, capturing output so we can explain failures. Retry once on
     # failure - rescues transient flakes (e.g. Slack's per-user installer).
