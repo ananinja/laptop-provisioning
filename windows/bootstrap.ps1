@@ -20,4 +20,7 @@ foreach ($f in @("install.ps1", "apps.json", "office-config.xml")) {
 }
 
 Write-Host "==> Starting install..." -ForegroundColor Cyan
+# Allow the downloaded script to run in THIS process only (no admin, not
+# persisted). Fresh laptops default to Restricted, which blocks .ps1 files.
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 & (Join-Path $dir "install.ps1")
