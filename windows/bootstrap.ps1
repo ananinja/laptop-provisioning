@@ -15,7 +15,7 @@ $dir  = Join-Path $env:TEMP "laptop-provisioning"
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 
 Write-Host "==> Downloading provisioning toolkit..." -ForegroundColor Cyan
-foreach ($f in @("install.ps1", "apps.json", "office-config.xml")) {
+foreach ($f in @("install.ps1", "apps.json")) {
     Invoke-WebRequest -Uri "$base/$f" -OutFile (Join-Path $dir $f) -UseBasicParsing
 }
 

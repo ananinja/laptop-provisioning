@@ -7,7 +7,7 @@ hand. Edit one file, every future machine gets the change.
 
 | App | Windows | Mac |
 |-----|:------:|:---:|
-| Microsoft Office (Word, Excel, PowerPoint, Outlook) | ✅ | ✅ |
+| Microsoft Office (Microsoft 365) | ✅ | ✅ |
 | Microsoft Teams | ✅ | — |
 | Slack | ✅ | — |
 | Google Chrome | ✅ | — |
@@ -15,8 +15,8 @@ hand. Edit one file, every future machine gets the change.
 | AnyDesk | ✅ | — |
 | Cortex XDR | manual¹ | — |
 
-Same set for every user. Office is **slimmed** to Word/Excel/PowerPoint/Outlook.
-Mac devices only require Microsoft Office.
+Same set for every user. Office installs last (it's the slowest). Mac devices
+only require Microsoft Office.
 
 ¹ Cortex XDR is **installed manually by the admin** from the Cortex console — it's
 a tenant-specific installer and isn't on winget. The script reminds you at the
@@ -98,7 +98,6 @@ never touches the repo), which is what lets the one-liner work with no login.
 laptop-provisioning/
 ├─ windows/
 │  ├─ apps.json         # winget app list - single source of truth
-│  ├─ office-config.xml # which Office apps install (Word/Excel/PowerPoint/Outlook)
 │  ├─ install.cmd       # double-click installer (launches install.ps1)
 │  ├─ install.ps1       # installs the winget apps, prints a summary
 │  ├─ uninstall.cmd     # double-click uninstaller (launches uninstall.ps1)
