@@ -99,7 +99,8 @@ foreach ($id in $ids) {
         $results += [pscustomobject]@{ App = $id; Status = "Installed"; Detail = "${elapsed}s" }
     } else {
         $hex = '0x{0:X8}' -f ($code -band 0xffffffff)
-        $why = $output | Select-String -Pattern 'error|failed|No package|hash|cancel|agreement' |
+        $why = $output |
+            Where-Object { $_ -match 'error|fail|cancel|denied|no package|not found' -and $_ -notmatch 'Successfully' } |
             Select-Object -Last 1
         $detail = if ($why) { $why.ToString().Trim() } else { "exit $code ($hex)" }
         Write-Host "    FAILED: $detail" -ForegroundColor Red
