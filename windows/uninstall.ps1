@@ -54,7 +54,7 @@ foreach ($id in $ids) {
     Write-Host "==> $id" -ForegroundColor Cyan
 
     # Not installed? Nothing to do.
-    $listed = winget list --id $id --exact 2>$null | Out-String
+    $listed = winget list --id $id --exact --accept-source-agreements 2>$null | Out-String
     if ($listed -notmatch [regex]::Escape($id)) {
         Write-Host "    not installed - skipping" -ForegroundColor Yellow
         $results += [pscustomobject]@{ App = $id; Status = "Not present"; Detail = "" }

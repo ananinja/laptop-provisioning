@@ -56,8 +56,10 @@ foreach ($id in $ids) {
     Write-Host ""
     Write-Host "==> $id" -ForegroundColor Cyan
 
-    # Already installed? Skip it.
-    $listed = winget list --id $id --exact 2>$null | Out-String
+    # Already installed? Skip it. (--accept-source-agreements is required here
+    # too: on a fresh machine the FIRST winget call shows a Y/N source-agreement
+    # prompt and would hang forever, since this output is captured not shown.)
+    $listed = winget list --id $id --exact --accept-source-agreements 2>$null | Out-String
     if ($listed -match [regex]::Escape($id)) {
         Write-Host "    already installed - skipping" -ForegroundColor Yellow
         $results += [pscustomobject]@{ App = $id; Status = "Already present"; Detail = "" }
