@@ -8,8 +8,8 @@
   Cortex XDR is NOT automated here - the admin installs it manually from the
   Cortex console (tenant-specific installer). The script reminds you at the end.
 
-  Shows a live progress heartbeat (so a long Office install never looks frozen)
-  and writes a full log file under %TEMP%\laptop-provisioning-logs.
+  Streams winget's own progress live (so a long Office install never looks
+  frozen) and writes a full log file under %TEMP%\laptop-provisioning-logs.
 
   Run via install.cmd (double-click) or:  .\windows\install.ps1
 #>
@@ -38,7 +38,6 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
     Write-Host "winget not found. Install 'App Installer' from the Microsoft Store, then re-run." -ForegroundColor Red
     exit 1
 }
-$wingetExe = (Get-Command winget).Source
 
 # Logs: per-app output + a full transcript of this run, under %TEMP%.
 $logDir = Join-Path $env:TEMP "laptop-provisioning-logs"
@@ -69,34 +68,31 @@ foreach ($id in $ids) {
     $wargs = @("install", "--id", $id, "--exact", "--silent",
                "--accept-package-agreements", "--accept-source-agreements")
 
-    # Run winget as a child process and poll it, printing an elapsed-time
-    # heartbeat every 10s so a long step (Office) never looks frozen. Output
-    # goes to per-app log files. Retry once on failure (e.g. Slack flake).
-    $code = $null; $output = @(); $elapsed = 0
+    # Run winget directly so its own progress streams live (never looks frozen)
+    # AND $LASTEXITCODE is reliable. Tee output to a per-app log. Retry once on a
+    # genuine failure (e.g. Slack flake).
+    $code = 0; $started = Get-Date
+    $appLog = Join-Path $logDir "$id.log"
     foreach ($attempt in 1..2) {
         if ($attempt -gt 1) { Write-Host "    retrying ($attempt/2)..." -ForegroundColor Yellow }
-        $outFile = Join-Path $logDir "$id.out.log"
-        $errFile = Join-Path $logDir "$id.err.log"
-        $started = Get-Date
-        Write-Host ("    installing... (started {0:HH:mm:ss})" -f $started) -ForegroundColor DarkGray
-        $proc = Start-Process -FilePath $wingetExe -ArgumentList $wargs -PassThru -NoNewWindow `
-            -RedirectStandardOutput $outFile -RedirectStandardError $errFile
-        while (-not $proc.HasExited) {
-            Start-Sleep -Seconds 10
-            $secs = [int]((Get-Date) - $started).TotalSeconds
-            Write-Host ("    ...still working ({0}s elapsed)" -f $secs) -ForegroundColor DarkGray
-        }
-        $code = $proc.ExitCode
-        $elapsed = [int]((Get-Date) - $started).TotalSeconds
-        $output = @()
-        if (Test-Path $outFile) { $output += Get-Content $outFile -ErrorAction SilentlyContinue }
-        if (Test-Path $errFile) { $output += Get-Content $errFile -ErrorAction SilentlyContinue }
+        Write-Host ("    installing... (started {0:HH:mm:ss})" -f (Get-Date)) -ForegroundColor DarkGray
+        & winget @wargs 2>&1 | Tee-Object -FilePath $appLog | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
+        $code = $LASTEXITCODE
         if ($code -eq 0) { break }
     }
+    $output = @(Get-Content $appLog -ErrorAction SilentlyContinue)
+    $elapsed = [int]((Get-Date) - $started).TotalSeconds
+
+    # winget returns non-zero for "already installed / no newer version" - treat
+    # those as success, not failure.
+    $alreadyThere = ($output -join "`n") -match 'already installed|No newer package|No applicable upgrade|No available upgrade'
 
     if ($code -eq 0) {
         Write-Host ("    installed (in {0}s)" -f $elapsed) -ForegroundColor Green
         $results += [pscustomobject]@{ App = $id; Status = "Installed"; Detail = "${elapsed}s" }
+    } elseif ($alreadyThere) {
+        Write-Host "    already installed" -ForegroundColor Yellow
+        $results += [pscustomobject]@{ App = $id; Status = "Already present"; Detail = "" }
     } else {
         $hex = '0x{0:X8}' -f ($code -band 0xffffffff)
         $why = $output |
@@ -104,7 +100,6 @@ foreach ($id in $ids) {
             Select-Object -Last 1
         $detail = if ($why) { $why.ToString().Trim() } else { "exit $code ($hex)" }
         Write-Host "    FAILED: $detail" -ForegroundColor Red
-        $output | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
         $results += [pscustomobject]@{ App = $id; Status = "Failed"; Detail = $detail }
     }
 }
