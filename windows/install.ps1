@@ -65,7 +65,10 @@ foreach ($id in $ids) {
         continue
     }
 
-    $wargs = @("install", "--id", $id, "--exact", "--silent",
+    # --source winget: all our apps are in the winget source. Forcing it avoids
+    # the msstore source, which fails on corporate networks that do SSL
+    # inspection (0x8a15005e cert error) and then makes installs "ambiguous".
+    $wargs = @("install", "--id", $id, "--exact", "--silent", "--source", "winget",
                "--accept-package-agreements", "--accept-source-agreements")
 
     # Slack's per-user installer fails when run elevated (which this script is).
