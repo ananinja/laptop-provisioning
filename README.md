@@ -3,6 +3,9 @@
 Automates the standard new-laptop app setup so admins don't install each app by
 hand. Edit one file, every future machine gets the change.
 
+**Service desk: see [SERVICE-DESK-GUIDE.md](SERVICE-DESK-GUIDE.md)** for the
+simple step-by-step. The rest of this README is for maintainers.
+
 ## What gets installed - As Agreed
 
 | App | Windows | Mac |
