@@ -68,6 +68,11 @@ foreach ($id in $ids) {
     $wargs = @("install", "--id", $id, "--exact", "--silent",
                "--accept-package-agreements", "--accept-source-agreements")
 
+    # Slack's per-user installer fails when run elevated (which this script is).
+    # Install it machine-wide instead - needs admin (we have it) and avoids that
+    # failure. The script self-elevates, so the machine scope is allowed.
+    if ($id -eq "SlackTechnologies.Slack") { $wargs += @("--scope", "machine") }
+
     # Run winget directly so its own progress streams live (never looks frozen)
     # AND $LASTEXITCODE is reliable. Tee output to a per-app log. Retry once on a
     # genuine failure (e.g. Slack flake).
