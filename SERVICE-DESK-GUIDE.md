@@ -63,6 +63,3 @@ The script reminds you of these at the end:
   `C:\Users\<you>\AppData\Local\Temp\laptop-provisioning-logs\`
 - Re-running the command often fixes a one-off hiccup.
 
-## Questions / issues
-
-Contact **Abdalrahman** (IT) with a screenshot of the summary.
